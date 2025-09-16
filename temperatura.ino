@@ -1,50 +1,64 @@
 #include <DHT11.h>
 #include <Servo.h>
 
-#define ServoMotor 4
+Servo ServoMotor;
+int posicaoAtual = 0;
 #define Botao 6
-#define Buzzer 7  // Novo pino para buzzer
-
 DHT11 dht11(2);
-Servo ventilacao; // Servo declarado fora do loop
 
 void setup() {
-  pinMode(Botao, INPUT);
-  pinMode(ServoMotor, OUTPUT);
-  pinMode(Buzzer, OUTPUT); // Configura o buzzer como saída
+  pinMode(6, INPUT);
+  pinMode(10, OUTPUT);
 
   Serial.begin(9600);
   dht11.setDelay(500);
 
-  ventilacao.attach(ServoMotor); // Inicializa o servo
-  ventilacao.write(0);           // Começa fechado
+  ServoMotor.attach(10);
 }
 
 void loop() {
-    float temperatura = dht11.readTemperature();
+  float temperatura = dht11.readTemperature();
 
-    if (temperatura != DHT11::ERROR_CHECKSUM && temperatura != DHT11::ERROR_TIMEOUT) {
-        Serial.print("Temperatura: ");
-        Serial.print(temperatura);
-        Serial.println(" °C");
-    } else {
-        Serial.println(DHT11::getErrorString(temperatura));
+  if (temperatura != DHT11::ERROR_CHECKSUM && temperatura != DHT11::ERROR_TIMEOUT) {
+    Serial.print("Temperatura: ");
+    Serial.print(temperatura);
+    Serial.println(" °C");
+  } else {
+    Serial.println(DHT11::getErrorString(temperatura));
+  }
+
+  // Define o ângulo alvo de acordo com a temperatura
+  int posicaoAlvo = 0;
+  if (temperatura <= 20) {          
+    posicaoAlvo = 0;      // 0% abertura
+  } else if (temperatura <= 25) {   
+    posicaoAlvo = 45;     // 25% abertura
+  } else if (temperatura <= 30) {   
+    posicaoAlvo = 90;     // 50% abertura
+  } else if (temperatura <= 35) {   
+    posicaoAlvo = 135;    // 75% abertura
+  } else {                         
+    posicaoAlvo = 180;    // 100% abertura
+  }
+
+  // Faz o servo girar suavemente até a posição alvo
+  if (posicaoAtual < posicaoAlvo) {
+    for (int i = posicaoAtual; i <= posicaoAlvo; i++) {
+      ServoMotor.write(i);
+      delay(15); // velocidade do giro
     }
-
-    // Controle proporcional do servo (ventilação)
-    if (temperatura <= 20) {          
-      ventilacao.write(0);      // 0% abertura
-    } else if (temperatura <= 25) {   
-      ventilacao.write(45);     // 25% abertura
-    } else if (temperatura <= 30) {   
-      ventilacao.write(90);     // 50% abertura
-    } else if (temperatura <= 35) {   
-      ventilacao.write(135);    // 75% abertura
-    } else {                         
-      ventilacao.write(180);    // 100% abertura
+  } else if (posicaoAtual > posicaoAlvo) {
+    for (int i = posicaoAtual; i >= posicaoAlvo; i--) {
+      ServoMotor.write(i);
+      delay(15);
     }
+  }
 
-    if (temperatura < 18 || temperatura > 38) {
+  posicaoAtual = posicaoAlvo;
+
+  delay(1000);
+
+      if (temperatura < 18 || temperatura > 38) {
         digitalWrite(Buzzer, HIGH); 
     } else {
         digitalWrite(Buzzer, LOW);  
