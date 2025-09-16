@@ -1,27 +1,26 @@
-#include <DHT.h>
+#include <DHT11.h>
+#include <Servo.h>
 
-#define DHTPIN 2       // Pino de dados conectado ao D2
-#define DHTTYPE DHT11
-
-DHT dht(DHTPIN, DHTTYPE);
+#define ServoMotor 4
+#define Botao 6
+DHT11 dht11(2);
 
 void setup() {
+  pinMode(6, INPUT);
+  pinMode(4, OUTPUT);
+
   Serial.begin(9600);
-  Serial.println("Iniciando sensor DHT...");
-  dht.begin();
-  delay(2000);  // Espera inicial
+  dht11.setDelay(500);
 }
 
 void loop() {
-  float temp = dht.readTemperature();
+    float temperatura = dht11.readTemperature();
 
-  if (isnan(temp)) {
-    Serial.println("Falha na leitura do sensor DHT!");
-  } else {
-    Serial.print("Temperatura: ");
-    Serial.print(temp);
-    Serial.println(" °C");
-  }
-
-  delay(5000);
+    if (temperatura != DHT11::ERROR_CHECKSUM && temperatura != DHT11::ERROR_TIMEOUT) {
+        Serial.print("Temperatura: ");
+        Serial.print(temperatura);
+        Serial.println(" °C");
+    } else {
+        Serial.println(DHT11::getErrorString(temperatura));
+    }
 }
