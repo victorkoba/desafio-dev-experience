@@ -23,4 +23,4 @@ void loop() {
     } else {
         Serial.println(DHT11::getErrorString(temperatura));
     }
-}
+}dsadsadsad
