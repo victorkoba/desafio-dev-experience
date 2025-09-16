@@ -3,18 +3,20 @@
 
 #define ServoMotor 4
 #define Botao 6
-DHT11 dht11(2);
+#define Buzzer 7  // Novo pino para buzzer
 
-Servo ventilacao; // Declaramos o servo fora do loop
+DHT11 dht11(2);
+Servo ventilacao; // Servo declarado fora do loop
 
 void setup() {
-  pinMode(6, INPUT);
-  pinMode(4, OUTPUT);
+  pinMode(Botao, INPUT);
+  pinMode(ServoMotor, OUTPUT);
+  pinMode(Buzzer, OUTPUT); // Configura o buzzer como saída
 
   Serial.begin(9600);
   dht11.setDelay(500);
 
-  ventilacao.attach(ServoMotor); // Inicializa o servo no pino definido
+  ventilacao.attach(ServoMotor); // Inicializa o servo
   ventilacao.write(0);           // Começa fechado
 }
 
@@ -29,6 +31,7 @@ void loop() {
         Serial.println(DHT11::getErrorString(temperatura));
     }
 
+    // Controle proporcional do servo (ventilação)
     if (temperatura <= 20) {          
       ventilacao.write(0);      // 0% abertura
     } else if (temperatura <= 25) {   
@@ -39,6 +42,12 @@ void loop() {
       ventilacao.write(135);    // 75% abertura
     } else {                         
       ventilacao.write(180);    // 100% abertura
+    }
+
+    if (temperatura < 18 || temperatura > 38) {
+        digitalWrite(Buzzer, HIGH); 
+    } else {
+        digitalWrite(Buzzer, LOW);  
     }
 
     delay(1000); 
